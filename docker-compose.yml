@@ -30,7 +30,8 @@ services:
       - ./install-conf.yml:/pydio/config/install.yml:ro
     environment:
       - CELLS_INSTALL_YAML=/pydio/config/install.yml
-      - CELLS_NO_SSL = 1
+      - CELLS_NO_SSL=1
+      - CELLS_SITE_NO_TLS=1
       - CELLS_BIND=0.0.0.0:443
       - CELLS_EXTERNAL=https://${PUBLIC_FQDN}
       # Injected in install conf at run time
