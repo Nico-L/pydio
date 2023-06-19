@@ -1,25 +1,38 @@
 version: '3.7'
 
-services:
+volumes:
+  cells_data: {}
+  mysql_data: {}
 
+services:
+  # DB backend
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PWD}
+      - MYSQL_DATABASE=cells
+      - MYSQL_USER=${MYSQL_USER_LOGIN}
+      - MYSQL_PASSWORD=${MYSQL_USER_PWD}
+    command: [mysqld, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci] 
+  
+  # Pydio Cells server
   cells:
     image: pydio/cells:latest
     restart: unless-stopped
-    ports:
-      - "8200:8080"
+    expose: [443]
+    volumes:
+      - cells_data:/var/cells
+      - ./install-conf.yml:/pydio/config/install.yml:ro
     environment:
       - CELLS_INSTALL_YAML=/pydio/config/install.yml
-    volumes: 
-      - ./cellsdir:/var/cells
-      - ./install-conf.yml:/pydio/config/install.yml:ro
-
-  mysql:
-    image: mariadb
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${ROOT_PWD}
-      MYSQL_DATABASE: cells
-      MYSQL_USER: pydio
-      MYSQL_PASSWORD: ${PWD}
-    volumes:
-      - ./mysqldir:/var/lib/mysql
+      - CELLS_BIND=0.0.0.0:443
+      # - CELLS_EXTERNAL=https://${PUBLIC_FQDN}
+      # Injected in install conf at run time
+      - CELLS_ADMIN_PWD=${CELLS_ADMIN_PWD}
+      - MYSQL_USER_LOGIN=${MYSQL_USER_LOGIN}
+      - MYSQL_USER_PWD=${MYSQL_USER_PWD}
+    depends_on:
+      - mysql
