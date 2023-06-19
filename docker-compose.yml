@@ -16,7 +16,9 @@ services:
       - MYSQL_DATABASE=cells
       - MYSQL_USER=${MYSQL_USER_LOGIN}
       - MYSQL_PASSWORD=${MYSQL_USER_PWD}
-    command: [mysqld, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci] 
+    command: [mysqld, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    networks:
+      - pydionetwork
   
   # Pydio Cells server
   cells:
@@ -36,3 +38,8 @@ services:
       - MYSQL_USER_PWD=${MYSQL_USER_PWD}
     depends_on:
       - mysql
+    networks:
+      - pydionetwork
+      
+networks:
+  pydionetwork:
