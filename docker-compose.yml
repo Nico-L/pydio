@@ -1,25 +1,20 @@
 version: "3.7"
 
-services:
-  cells:
-    image: pydio/cells:latest
-    expose: [8080]
-    environment:
-      - CELLS_BIND=0.0.0.0:8080
-      - CELLS_EXTERNAL=http://localhost
-      - CELLS_NO_TLS=1
-    labels:
-      - traefik.http.routers.cells.rule=Host(`localhost`)
-      - traefik.http.routers.cells.entrypoints=web
+volumes:
+    cells_working_dir: {}
+    cells_data: {}
+    mysql_data: {}
 
+services:
+  # DB backend
   mysql:
     image: mysql:8
     restart: unless-stopped
     environment: 
-      - MYSQL_ROOT_PASSWORD=cells
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=cells
-      - MYSQL_USER=pydio
-      - MYSQL_PASSWORD=cells
+      - MYSQL_USER=${MYSQL_CELLS_USER_LOGIN}
+      - MYSQL_PASSWORD=${MYSQL_CELLS_USER_PASSWORD}
     cap_add: 
       - SYS_NICE 
     command: 
@@ -27,3 +22,32 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --default_authentication_plugin=mysql_native_password
+
+
+# Pydio Cells app
+  cells:
+    image: ${CELLS_DOCKER_IMAGE}
+    restart: unless-stopped
+    # Not compulsory but it eases some of the maintenance operations. 
+    hostname: cells
+    expose:
+      - 443
+    volumes:
+      - cells_working_dir:/var/cells
+      - cells_data:/data
+      - ./metrics:/var/cells/services/pydio.gateway.metrics
+    environment:
+      - CELLS_WORKING_DIR=/var/cells
+      - CELLS_DATA=/data
+      - CELLS_BIND=${PUBLIC_FQDN}:443
+      - CELLS_EXTERNAL=https://${PUBLIC_FQDN}
+      - CELLS_ENABLE_METRICS=true
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.cells.loadbalancer.server.scheme=https
+      - traefik.http.routers.cells.rule=Host(`${PUBLIC_FQDN}`)
+      - traefik.http.routers.cells.entrypoints=websecure
+      - traefik.http.routers.cells.tls=true
+      - traefik.http.routers.cells.tls.certresolver=leresolver
+    depends_on:
+      - mysql
