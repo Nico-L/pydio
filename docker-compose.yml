@@ -26,7 +26,7 @@ services:
 
 # Pydio Cells app
   cells:
-    image: ${CELLS_DOCKER_IMAGE}
+    image: pydio/cells:latest
     restart: unless-stopped
     # Not compulsory but it eases some of the maintenance operations. 
     hostname: cells
