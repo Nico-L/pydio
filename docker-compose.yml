@@ -11,10 +11,10 @@ services:
     image: mysql:8
     restart: unless-stopped
     environment: 
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=rpwd
       - MYSQL_DATABASE=cells
-      - MYSQL_USER=${MYSQL_CELLS_USER_LOGIN}
-      - MYSQL_PASSWORD=${MYSQL_CELLS_USER_PASSWORD}
+      - MYSQL_USER=pydio
+      - MYSQL_PASSWORD=pwd
     cap_add: 
       - SYS_NICE 
     command: 
@@ -39,15 +39,8 @@ services:
     environment:
       - CELLS_WORKING_DIR=/var/cells
       - CELLS_DATA=/data
-      - CELLS_BIND=${PUBLIC_FQDN}:443
-      - CELLS_EXTERNAL=https://${PUBLIC_FQDN}
+      - CELLS_BIND=test.luchier.fr:443
+      - CELLS_EXTERNAL=https://test.luchier.fr
       - CELLS_ENABLE_METRICS=true
-    labels:
-      - traefik.enable=true
-      - traefik.http.services.cells.loadbalancer.server.scheme=https
-      - traefik.http.routers.cells.rule=Host(`${PUBLIC_FQDN}`)
-      - traefik.http.routers.cells.entrypoints=websecure
-      - traefik.http.routers.cells.tls=true
-      - traefik.http.routers.cells.tls.certresolver=leresolver
     depends_on:
       - mysql
